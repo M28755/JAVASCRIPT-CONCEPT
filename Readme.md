@@ -1,0 +1,17 @@
+# Tracking progress in learning javascript
+ - 1. Arrary
+ - 2. Loops
+ - 3. Functions
+ - 4. Object
+ - 5. Prototypes
+ - 6. Classes
+ - 7. Map and Set
+ - 8. Error Handling
+ - 9. Date and Time
+ - 10. Regular Expressions
+ - 11. Destructuring and Spread/Rest Operators
+ - 12. ES6 Modules
+ - 13. Promises, Async/Await
+ - 14. Generators and Iterators
+ - 15. Proxies and Reflect
+ - 16. Symbols and Enums
