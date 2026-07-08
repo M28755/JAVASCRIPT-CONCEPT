@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TST</title>
+    <style>
+        /* --- Desktop Tabs Styling --- */
+        .tabs-nav {
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Active desktop tab state */
+        .tab-btn.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+
+        .badge {
+            background-color: #e0e0e0;
+            color: #333;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        /* --- Mobile Dropdown Styling --- */
+        .mobile-nav {
+            display: none;
+            /* Hidden by default on desktop */
+            margin-bottom: 20px;
+        }
+
+        #mobile-select {
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #007bff;
+            border-radius: 6px;
+            background-color: #fff;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* --- Responsive Layout Rules --- */
+        @media (max-width: 768px) {
+            .tabs-nav {
+                display: none;
+                /* Hide standard tabs on smaller screens */
+            }
+
+            .mobile-nav {
+                display: block;
+                /* Show dropdown on smaller screens */
+            }
+        }
+
+        /* --- Content Views Visibility --- */
+        /* (Assuming your target views have a common class like .view-panel) */
+        .view-panel {
+            display: none;
+        }
+
+        .view-panel.active {
+            display: block;
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Navigation tabs -->
+    <nav class="tabs-nav">
+        <button class="tab-btn active" data-target="history-view">HISTORY</button>
+        <button class="tab-btn" data-target="compare-view">COMPARE</button>
+        <button class="tab-btn" data-target="favorites-view">FAVORITE <span class="badge">0</span></button>
+        <button class="tab-btn" data-target="log-view">LOG <span class="badge">0</span></button>
+    </nav>
+    <!-- mobile navigtion selection -->
+    <div class="mobile-nav">
+        <select name="" id="mobile-select">
+            <option value="history" data-target="history-view" class="mobile-nav-btn active">HISTORY</option>
+            <option value="compare" data-target="compare-view" class="mobile-nav-btn">COMPARE</option>
+            <option value="favorites" data-target="favorites-view" class="mobile-nav-btn">FAVORITE
+                <span class="badge">0</span>
+            </option>
+            <option value="log" data-target="log-view" class="mobile-nav-btn">LOG
+                <span class="badge">0</span>
+            </option>
+        </select>
+    </div>
+    <div id="history-view" class="view-panel active">History content goes here</div>
+    <div id="compare-view" class="view-panel">Compare content goes here</div>
+    <div id="favorites-view" class="view-panel">Favorites content goes here</div>
+    <div id="log-view" class="view-panel">Log content goes here</div>
+
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const mobileSelect = document.getElementById('mobile-select');
+
+        // Helper function to switch the actual content panels
+        function switchView(targetId) {
+            // 1. Hide all views and remove active classes
+            /* document.querySelectorAll('.view-panel').forEach(view => {
+                view.classList.remove('active');
+            }); */
+
+            // 2. Show the targeted view
+            const targetView = document.getElementById(targetId);
+            if (targetView) {
+                targetView.classList.add('active');
+            }
+        }
+
+        // Handle Desktop Tab Clicks
+        tabButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const target = button.getAttribute('data-target');
+
+                // Update desktop active UI
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Sync the mobile select element
+                const correspondingOption = Array.from(mobileSelect.options).find(
+                    opt => opt.getAttribute('data-target') === target
+                );
+                if (correspondingOption) {
+                    mobileSelect.value = correspondingOption.value;
+                }
+
+                // Run the view switch
+                switchView(target);
+            });
+        });
+
+        // Handle Mobile Select Changes
+        mobileSelect.addEventListener('change', (e) => {
+            const selectedOption = mobileSelect.options[mobileSelect.selectedIndex];
+            const target = selectedOption.getAttribute('data-target');
+
+            // Sync the desktop tabs active UI
+            tabButtons.forEach(btn => {
+                if (btn.getAttribute('data-target') === target) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Run the view switch
+            switchView(target);
+        });
+    });
+
+</script>
+
+</html>

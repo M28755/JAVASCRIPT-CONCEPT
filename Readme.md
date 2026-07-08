@@ -155,5 +155,16 @@ document.getElementById('demo').innerHTML = Array.from(NodeList, (li) => {
 >  `querySelectorAll()` returns a **NodeList**, not a true Array. `Array.from()` converts it so you can use `.map()`, `.filter()`, `.reduce()`, etc.
 
 
+### 1.4 Array Methods
+
+ push() = adding array element to the end 
+ pop() = removing array element from the end 
+ shift() = removing array element from the start 
+ unshift() = adding array element to the start 
+ splice() = removing and adding array element from the specified index
+ filter() = filtering array element based on the condition
+  
+
+
 
 
