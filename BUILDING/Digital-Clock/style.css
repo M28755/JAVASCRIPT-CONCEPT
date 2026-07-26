@@ -1,0 +1,127 @@
+ * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(145deg, #0b1120 0%, #1a253b 100%);
+      font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+      padding: 1rem;
+    }
+
+    .clock-card {
+      background: rgba(18, 28, 46, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 3.5rem;
+      padding: 3rem 4rem;
+      box-shadow: 
+        0 30px 50px rgba(0, 0, 0, 0.7),
+        inset 0 1px 1px rgba(255, 255, 255, 0.08),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: box-shadow 0.2s ease;
+      width: fit-content;
+      max-width: 100%;
+    }
+
+    .clock-card:hover {
+      box-shadow: 0 40px 60px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+    }
+
+    .clock-display {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 0.2rem;
+      color: #e3f0ff;
+      text-shadow: 0 0 12px rgba(0, 180, 255, 0.25), 0 4px 8px rgba(0, 0, 0, 0.6);
+      letter-spacing: 0.04em;
+      flex-wrap: wrap;
+    }
+
+    .time-digits {
+      font-size: clamp(3.8rem, 15vw, 6.5rem);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+      background: linear-gradient(to bottom, #f0f9ff, #bdd9ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 20px rgba(30, 144, 255, 0.3);
+    }
+
+    .separator {
+      font-size: clamp(3.4rem, 13vw, 6rem);
+      font-weight: 300;
+      color: #8bbaff;
+      opacity: 0.7;
+      margin: 0 0.1rem;
+      text-shadow: 0 0 8px #3f7ec0;
+      animation: pulse 1.2s infinite ease-in-out;
+    }
+
+    .period {
+      font-size: clamp(1.3rem, 4vw, 2.2rem);
+      font-weight: 500;
+      margin-left: 0.35rem;
+      padding: 0.2rem 0.7rem;
+      background: rgba(60, 130, 210, 0.2);
+      border-radius: 60px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: #aac9ff;
+      letter-spacing: 0.05em;
+      backdrop-filter: blur(4px);
+      text-transform: uppercase;
+      align-self: center;
+    }
+
+    .date-row {
+      margin-top: 1.4rem;
+      text-align: center;
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      color: #9bb9e6;
+      letter-spacing: 0.06em;
+      font-weight: 400;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 1.2rem;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+      background: linear-gradient(90deg, transparent, rgba(100, 180, 255, 0.08), transparent);
+    }
+
+    .date-row span {
+      display: inline-block;
+      background: rgba(0, 40, 80, 0.2);
+      padding: 0.2rem 1.2rem;
+      border-radius: 40px;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      font-weight: 300;
+    }
+
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+
+    @media (max-width: 500px) {
+      .clock-card {
+        padding: 2rem 1.5rem;
+        border-radius: 2.5rem;
+      }
+      .period {
+        margin-left: 0.15rem;
+        padding: 0.1rem 0.5rem;
+      }
+      .separator {
+        margin: 0 0.05rem;
+      }
+    }
