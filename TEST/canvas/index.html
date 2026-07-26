@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SIGNAL — Media Canvas Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:      #111116;
+    --panel:    #1a1a20;
+    --panel-2:  #212228;
+    --line:     #33343c;
+    --line-dim: #26272e;
+    --text:     #e9e8ea;
+    --text-dim: #93939c;
+    --phosphor: #7CFF8C;
+    --phosphor-dim: #3f8a4a;
+    --tally:    #FF7A3D;
+    --tally-dim:#7a3d20;
+    --steel:    #6E9CB8;
+    font-size: 15px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at top left, #17181d 0%, var(--ink) 55%);
+    color:var(--text);
+    font-family:'JetBrains Mono', monospace;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+  ::selection{ background:var(--phosphor); color:#0a0a0a; }
+
+  /* ---------- Top bar ---------- */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#1c1d22,#17181c);
+  }
+  .brand{ display:flex; align-items:baseline; gap:10px; }
+  .brand .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--tally); box-shadow:0 0 8px 2px var(--tally);
+    animation:pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.35} }
+  .brand h1{
+    font-family:'Oswald',sans-serif; font-weight:700; letter-spacing:.14em;
+    font-size:20px; margin:0; text-transform:uppercase; color:var(--text);
+  }
+  .brand span.tag{
+    font-size:11px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase;
+  }
+  .readout{
+    font-size:12px; color:var(--phosphor); letter-spacing:.06em;
+    border:1px solid var(--line); padding:6px 12px; border-radius:3px;
+    background:#0e0f12; min-width:150px; text-align:right;
+  }
+
+  /* ---------- Layout ---------- */
+  .app{ flex:1; display:grid; grid-template-columns:270px 1fr; gap:0; min-height:0; }
+  @media (max-width:880px){ .app{ grid-template-columns:1fr; } }
+
+  aside{
+    border-right:1px solid var(--line);
+    background:var(--panel);
+    overflow-y:auto;
+    padding:16px 16px 40px;
+  }
+  aside::-webkit-scrollbar{ width:8px; }
+  aside::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+
+  .section-label{
+    font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--text-dim);
+    margin:22px 0 10px; display:flex; align-items:center; gap:8px;
+  }
+  .section-label:first-child{ margin-top:0; }
+  .section-label::after{ content:''; flex:1; height:1px; background:var(--line-dim); }
+
+  .drop{
+    border:1.5px dashed var(--line);
+    border-radius:6px; padding:22px 12px; text-align:center;
+    cursor:pointer; transition:.15s border-color, .15s background;
+    font-size:12px; color:var(--text-dim);
+  }
+  .drop:hover, .drop.drag{ border-color:var(--phosphor); background:#151a16; color:var(--text); }
+  .drop svg{ display:block; margin:0 auto 8px; opacity:.7; }
+  input[type=file]{ display:none; }
+
+  .ctrl{ margin-bottom:14px; }
+  .ctrl label{
+    display:flex; justify-content:space-between; font-size:11.5px;
+    color:var(--text-dim); margin-bottom:5px; letter-spacing:.03em;
+  }
+  .ctrl label .val{ color:var(--phosphor); font-weight:700; }
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:4px; border-radius:2px;
+    background:var(--line); outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+    background:var(--phosphor); border:2px solid #0a0a0a; cursor:pointer;
+    box-shadow:0 0 6px rgba(124,255,140,.6);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:13px; height:13px; border-radius:50%; background:var(--phosphor);
+    border:2px solid #0a0a0a; cursor:pointer;
+  }
+
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+
+  button{
+    font-family:'JetBrains Mono', monospace; font-size:11.5px;
+    background:var(--panel-2); color:var(--text); border:1px solid var(--line);
+    border-radius:4px; padding:8px 10px; cursor:pointer; letter-spacing:.03em;
+    transition:.12s all;
+  }
+  button:hover{ border-color:var(--steel); color:#fff; }
+  button:active{ transform:translateY(1px); }
+  button.on{ border-color:var(--phosphor); color:var(--phosphor); background:#132316; }
+  button.wide{ width:100%; margin-bottom:8px; }
+  button.primary{
+    border-color:var(--phosphor); color:#0a0a0a; background:var(--phosphor); font-weight:700;
+  }
+  button.primary:hover{ background:#96ffa4; }
+  button.ghost{ background:transparent; }
+  button.danger:hover{ border-color:var(--tally); color:var(--tally); }
+  button:disabled{ opacity:.35; cursor:not-allowed; }
+  button:disabled:hover{ border-color:var(--line); color:var(--text); }
+
+  .preset-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+  .overlay-item{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel-2); border:1px solid var(--line-dim); border-radius:4px;
+    padding:7px 9px; margin-bottom:6px; font-size:11.5px; cursor:pointer;
+  }
+  .overlay-item.sel{ border-color:var(--phosphor); }
+  .overlay-item span.x{ color:var(--text-dim); }
+  .overlay-item span.x:hover{ color:var(--tally); }
+
+  .prop-panel{
+    border:1px solid var(--line-dim); border-radius:5px; padding:10px; margin-top:8px; background:#16171b;
+  }
+  .prop-panel input[type=text]{
+    width:100%; background:#0e0f12; border:1px solid var(--line); color:var(--text);
+    font-family:'JetBrains Mono',monospace; font-size:12px; padding:6px 8px; border-radius:3px; margin-bottom:8px;
+  }
+  .prop-panel input[type=color]{
+    width:100%; height:28px; border:1px solid var(--line); border-radius:3px; background:none; padding:0; cursor:pointer;
+  }
+
+  /* ---------- Stage ---------- */
+  main{ display:flex; flex-direction:column; min-width:0; }
+  .stage-wrap{
+    flex:1; display:flex; align-items:center; justify-content:center;
+    padding:26px; min-height:0; position:relative;
+    background-image:linear-gradient(45deg,#18191d 25%,transparent 25%),
+                      linear-gradient(-45deg,#18191d 25%,transparent 25%),
+                      linear-gradient(45deg,transparent 75%,#18191d 75%),
+                      linear-gradient(-45deg,transparent 75%,#18191d 75%);
+    background-size:22px 22px; background-position:0 0,0 11px,11px -11px,-11px 0;
+    background-color:#101014;
+  }
+  .stage-empty{
+    text-align:center; color:var(--text-dim); font-size:13px; max-width:320px;
+  }
+  .stage-empty h2{
+    font-family:'Oswald',sans-serif; color:var(--text); font-size:22px; letter-spacing:.04em;
+    text-transform:uppercase; margin:14px 0 8px; font-weight:600;
+  }
+  canvas#stage{
+    max-width:100%; max-height:100%; box-shadow:0 20px 60px -10px rgba(0,0,0,.7), 0 0 0 1px var(--line);
+    border-radius:2px; cursor:default;
+  }
+  #stage.draggable{ cursor:grab; }
+
+  .transport{
+    display:none; align-items:center; gap:12px; padding:10px 22px;
+    border-top:1px solid var(--line); background:var(--panel);
+  }
+  .transport button.play{
+    width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    padding:0; border-color:var(--phosphor);
+  }
+  .transport input[type=range]{ flex:1; }
+  .transport .time{ font-size:11px; color:var(--text-dim); min-width:96px; text-align:center; }
+
+  .scope-wrap{
+    border-top:1px solid var(--line); background:#0c0d10; position:relative; display:none;
+  }
+  .scope-wrap .scope-label{
+    position:absolute; top:6px; left:10px; font-size:9.5px; letter-spacing:.14em;
+    color:var(--phosphor-dim); text-transform:uppercase; font-family:'Oswald',sans-serif;
+  }
+  canvas#scope{ display:block; width:100%; height:86px; }
+
+  .hint{ font-size:10.5px; color:var(--text-dim); line-height:1.5; margin-top:4px; }
+
+  /* toast */
+  #toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:#16171b; border:1px solid var(--phosphor); color:var(--phosphor);
+    padding:9px 16px; border-radius:5px; font-size:12px; opacity:0; pointer-events:none;
+    transition:.25s all; z-index:50; letter-spacing:.03em;
+  }
+  #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="dot"></div>
+    <h1>Signal</h1>
+    <span class="tag">Media Canvas Studio</span>
+  </div>
+  <div class="readout" id="readout">NO SOURCE LOADED</div>
+</header>
+
+<div class="app">
+  <aside>
+    <div class="section-label">Source</div>
+    <div class="drop" id="drop">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#7CFF8C" stroke-width="1.6"><path d="M12 3v12m0-12l-4 4m4-4l4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+      Drop a photo or video<br>or click to browse
+    </div>
+    <input type="file" id="fileInput" accept="image/*,video/*">
+
+    <div class="section-label">Color</div>
+    <div class="ctrl"><label>Brightness <span class="val" id="v-brightness">0</span></label>
+      <input type="range" id="brightness" min="-100" max="100" value="0"></div>
+    <div class="ctrl"><label>Contrast <span class="val" id="v-contrast">0</span></label>
+      <input type="range" id="contrast" min="-100" max="100" value="0"></div>
+    <div class="ctrl"><label>Saturation <span class="val" id="v-saturation">100</span></label>
+      <input type="range" id="saturation" min="0" max="200" value="100"></div>
+    <div class="ctrl"><label>Gamma <span class="val" id="v-gamma">100</span></label>
+      <input type="range" id="gamma" min="40" max="220" value="100"></div>
+    <div class="ctrl"><label>Temperature <span class="val" id="v-temperature">0</span></label>
+      <input type="range" id="temperature" min="-100" max="100" value="0"></div>
+
+    <div class="section-label">Effects</div>
+    <div class="ctrl"><label>Blur <span class="val" id="v-blur">0</span></label>
+      <input type="range" id="blur" min="0" max="12" value="0"></div>
+    <div class="ctrl"><label>Pixelate <span class="val" id="v-pixelate">1</span></label>
+      <input type="range" id="pixelate" min="1" max="40" value="1"></div>
+    <div class="ctrl"><label>Vignette <span class="val" id="v-vignette">0</span></label>
+      <input type="range" id="vignette" min="0" max="100" value="0"></div>
+    <div class="ctrl"><label>Grain <span class="val" id="v-grain">0</span></label>
+      <input type="range" id="grain" min="0" max="100" value="0"></div>
+
+    <div class="section-label">Presets</div>
+    <div class="preset-grid" id="presets">
+      <button data-preset="none" class="on">None</button>
+      <button data-preset="grayscale">Grayscale</button>
+      <button data-preset="sepia">Sepia</button>
+      <button data-preset="invert">Invert</button>
+      <button data-preset="noir">Noir</button>
+      <button data-preset="cyanotype">Cyanotype</button>
+    </div>
+    <button class="wide ghost" id="resetFilters" style="margin-top:10px;">Reset color &amp; effects</button>
+
+    <div class="section-label">Overlays</div>
+    <div class="row3">
+      <button id="addText">+ Text</button>
+      <button id="addRect">+ Box</button>
+      <button id="addCircle">+ Dot</button>
+    </div>
+    <div id="overlayList" style="margin-top:10px;"></div>
+    <div id="propPanel"></div>
+
+    <div class="section-label">Export</div>
+    <button class="wide primary" id="exportBtn" disabled>Export PNG</button>
+    <div class="hint" id="exportHint">Load an image to enable export.</div>
+  </aside>
+
+  <main>
+    <div class="stage-wrap" id="stageWrap">
+      <div class="stage-empty" id="stageEmpty">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4a4b54" stroke-width="1.3"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>
+        <h2>Empty Frame</h2>
+        Upload a photo or video to start grading, layering overlays, and reading its waveform live.
+      </div>
+      <canvas id="stage"></canvas>
+    </div>
+
+    <div class="transport" id="transport">
+      <button class="play" id="playBtn">▶</button>
+      <input type="range" id="scrub" min="0" max="100" value="0" step="0.01">
+      <div class="time" id="timeReadout">00:00 / 00:00</div>
+      <button id="muteBtn">🔊</button>
+    </div>
+
+    <div class="scope-wrap" id="scopeWrap">
+      <div class="scope-label">Audio Waveform · Live</div>
+      <canvas id="scope"></canvas>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------------------------------------------------------
+  // DOM refs
+  // ---------------------------------------------------------------
+  const $ = id => document.getElementById(id);
+  const drop = $('drop'), fileInput = $('fileInput');
+  const stage = $('stage'), ctx = stage.getContext('2d', {willReadFrequently:true});
+  const stageWrap = $('stageWrap'), stageEmpty = $('stageEmpty');
+  const transport = $('transport'), playBtn = $('playBtn'), scrub = $('scrub'),
+        timeReadout = $('timeReadout'), muteBtn = $('muteBtn');
+  const scopeWrap = $('scopeWrap'), scope = $('scope'), scopeCtx = scope.getContext('2d');
+  const readout = $('readout');
+  const exportBtn = $('exportBtn'), exportHint = $('exportHint');
+  const overlayList = $('overlayList'), propPanel = $('propPanel');
+  const toastEl = $('toast');
+
+  const sliderIds = ['brightness','contrast','saturation','gamma','temperature','blur','pixelate','vignette','grain'];
+  const sliders = {}; sliderIds.forEach(id => sliders[id] = $(id));
+
+  // ---------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------
+  let mode = null;              // 'image' | 'video'
+  let videoEl = null;
+  let originalImageData = null; // cached raw pixels for image mode
+  let W = 0, H = 0;             // working resolution
+  let preset = 'none';
+  let overlays = [];             // {id,type,x,y,...}
+  let selectedId = null;
+  let dragState = null;
+  let rafId = null;
+  let scopeRafId = null;
+
+  // audio
+  let audioCtx = null, analyser = null, sourceNode = null, destNode = null;
+  let timeData = null;
+
+  const MAX_DIM = 860; // working resolution cap for perf
+
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=>toastEl.classList.remove('show'), 1800);
+  }
+
+  // ---------------------------------------------------------------
+  // Upload handling
+  // ---------------------------------------------------------------
+  drop.addEventListener('click', ()=>fileInput.click());
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.classList.add('drag');}));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{e.preventDefault(); drop.classList.remove('drag');}));
+  drop.addEventListener('drop', e=>{
+    const f = e.dataTransfer.files[0];
+    if(f) loadFile(f);
+  });
+  fileInput.addEventListener('change', e=>{
+    const f = e.target.files[0];
+    if(f) loadFile(f);
+  });
+
+  function loadFile(file){
+    const isVideo = file.type.startsWith('video/');
+    const isImage = file.type.startsWith('image/');
+    if(!isVideo && !isImage){ toast('Unsupported file type'); return; }
+
+    stopEverything();
+    overlays = []; selectedId = null; renderOverlayList(); renderPropPanel();
+    const url = URL.createObjectURL(file);
+
+    if(isImage){
+      const img = new Image();
+      img.onload = ()=>{
+        mode = 'image';
+        const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
+        W = Math.round(img.width * scale); H = Math.round(img.height * scale);
+        stage.width = W; stage.height = H;
+        const off = document.createElement('canvas'); off.width=W; off.height=H;
+        off.getContext('2d').drawImage(img,0,0,W,H);
+        originalImageData = off.getContext('2d').getImageData(0,0,W,H);
+        stageEmpty.style.display='none'; stage.style.display='block';
+        transport.style.display='none'; scopeWrap.style.display='none';
+        exportBtn.disabled = false; exportBtn.textContent = 'Export PNG';
+        exportHint.textContent = 'Renders the current grade + overlays to a PNG.';
+        readout.textContent = `IMAGE · ${img.width}×${img.height}`;
+        recomputeAndDraw();
+      };
+      img.src = url;
+    } else {
+      const v = document.createElement('video');
+      v.src = url; v.crossOrigin = 'anonymous'; v.playsInline = true; v.muted = false; v.loop = true;
+      v.addEventListener('loadedmetadata', ()=>{
+        mode = 'video'; videoEl = v;
+        const scale = Math.min(1, MAX_DIM / Math.max(v.videoWidth, v.videoHeight));
+        W = Math.round(v.videoWidth * scale); H = Math.round(v.videoHeight * scale);
+        stage.width = W; stage.height = H;
+        stageEmpty.style.display='none'; stage.style.display='block';
+        transport.style.display='flex'; scopeWrap.style.display='block';
+        resizeScope();
+        exportBtn.disabled = false; exportBtn.textContent = 'Export WEBM';
+        exportHint.textContent = 'Records playback with grade, overlays &amp; audio to a .webm file.';
+        readout.textContent = `VIDEO · ${v.videoWidth}×${v.videoHeight} · ${fmtTime(v.duration)}`;
+        scrub.max = v.duration;
+        setupAudio(v);
+        drawVideoFrameStatic();
+        startScopeLoop();
+      });
+      v.addEventListener('timeupdate', ()=>{ if(!dragState || dragState.type!=='scrub') scrub.value = v.currentTime; updateTimeReadout(); });
+      v.addEventListener('play', ()=>{ playBtn.textContent='❚❚'; startVideoLoop(); });
+      v.addEventListener('pause', ()=>{ playBtn.textContent='▶'; });
+      v.addEventListener('ended', ()=>{ playBtn.textContent='▶'; });
+    }
+  }
+
+  function stopEverything(){
+    if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+    if(scopeRafId){ cancelAnimationFrame(scopeRafId); scopeRafId=null; }
+    if(videoEl){ videoEl.pause(); videoEl=null; }
+    if(audioCtx){ try{ audioCtx.close(); }catch(e){} audioCtx=null; }
+  }
+
+  function fmtTime(t){
+    if(!isFinite(t)) return '00:00';
+    const m = Math.floor(t/60), s = Math.floor(t%60);
+    return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  }
+  function updateTimeReadout(){
+    timeReadout.textContent = `${fmtTime(videoEl.currentTime)} / ${fmtTime(videoEl.duration)}`;
+  }
+
+  // ---------------------------------------------------------------
+  // Pixel filter engine
+  // ---------------------------------------------------------------
+  function getParams(){
+    const p = {};
+    sliderIds.forEach(id => p[id] = parseFloat(sliders[id].value));
+    p.preset = preset;
+    return p;
+  }
+
+  function pixelate(data, w, h, block){
+    if(block <= 1) return;
+    for(let by=0; by<h; by+=block){
+      for(let bx=0; bx<w; bx+=block){
+        let r=0,g=0,b=0,a=0,n=0;
+        const bw = Math.min(block, w-bx), bh = Math.min(block, h-by);
+        for(let y=0;y<bh;y++){
+          for(let x=0;x<bw;x++){
+            const i = ((by+y)*w + (bx+x))*4;
+            r+=data[i]; g+=data[i+1]; b+=data[i+2]; a+=data[i+3]; n++;
+          }
+        }
+        r/=n; g/=n; b/=n; a/=n;
+        for(let y=0;y<bh;y++){
+          for(let x=0;x<bw;x++){
+            const i = ((by+y)*w + (bx+x))*4;
+            data[i]=r; data[i+1]=g; data[i+2]=b; data[i+3]=a;
+          }
+        }
+      }
+    }
+  }
+
+  // fast box blur, horizontal + vertical pass
+  function boxBlur(data, w, h, radius){
+    if(radius <= 0) return;
+    const tmp = new Uint8ClampedArray(data.length);
+    const r = Math.round(radius);
+    // horizontal
+    for(let y=0;y<h;y++){
+      let rs=0,gs=0,bs=0,as=0,count=0;
+      const rowStart = y*w*4;
+      for(let x=-r;x<=r;x++){
+        const xi = Math.min(w-1, Math.max(0,x));
+        const i = rowStart + xi*4;
+        rs+=data[i]; gs+=data[i+1]; bs+=data[i+2]; as+=data[i+3]; count++;
+      }
+      for(let x=0;x<w;x++){
+        const i = rowStart + x*4;
+        tmp[i]=rs/count; tmp[i+1]=gs/count; tmp[i+2]=bs/count; tmp[i+3]=as/count;
+        const addX = Math.min(w-1, x+r+1), remX = Math.max(0, x-r);
+        const ai = rowStart+addX*4, ri = rowStart+remX*4;
+        rs += data[ai]-data[ri]; gs += data[ai+1]-data[ri+1];
+        bs += data[ai+2]-data[ri+2]; as += data[ai+3]-data[ri+3];
+      }
+    }
+    // vertical
+    for(let x=0;x<w;x++){
+      let rs=0,gs=0,bs=0,as=0,count=0;
+      for(let y=-r;y<=r;y++){
+        const yi = Math.min(h-1, Math.max(0,y));
+        const i = (yi*w+x)*4;
+        rs+=tmp[i]; gs+=tmp[i+1]; bs+=tmp[i+2]; as+=tmp[i+3]; count++;
+      }
+      for(let y=0;y<h;y++){
+        const i = (y*w+x)*4;
+        data[i]=rs/count; data[i+1]=gs/count; data[i+2]=bs/count; data[i+3]=as/count;
+        const addY = Math.min(h-1, y+r+1), remY = Math.max(0, y-r);
+        const ai = (addY*w+x)*4, ri=(remY*w+x)*4;
+        rs += tmp[ai]-tmp[ri]; gs += tmp[ai+1]-tmp[ri+1];
+        bs += tmp[ai+2]-tmp[ri+2]; as += tmp[ai+3]-tmp[ri+3];
+      }
+    }
+  }
+
+  function applyColorGrade(data, p){
+    const brightness = p.brightness * 2.55;
+    const c = p.contrast;
+    const cf = (259*(c+255)) / (255*(259-c));
+    const sat = p.saturation/100;
+    const gamma = 100/p.gamma;
+    const temp = p.temperature * 0.6;
+    const grain = p.grain;
+
+    for(let i=0;i<data.length;i+=4){
+      let r=data[i], g=data[i+1], b=data[i+2];
+
+      // brightness
+      r+=brightness; g+=brightness; b+=brightness;
+      // contrast
+      r = cf*(r-128)+128; g = cf*(g-128)+128; b = cf*(b-128)+128;
+      // gamma
+      r = 255*Math.pow(Math.min(Math.max(r,0),255)/255, gamma);
+      g = 255*Math.pow(Math.min(Math.max(g,0),255)/255, gamma);
+      b = 255*Math.pow(Math.min(Math.max(b,0),255)/255, gamma);
+      // saturation
+      const gray = 0.299*r+0.587*g+0.114*b;
+      r = gray + (r-gray)*sat; g = gray + (g-gray)*sat; b = gray + (b-gray)*sat;
+      // temperature (warm/cool)
+      r += temp; b -= temp;
+      // grain
+      if(grain>0){
+        const n = (Math.random()-0.5) * grain * 1.6;
+        r+=n; g+=n; b+=n;
+      }
+
+      data[i]=r; data[i+1]=g; data[i+2]=b;
+    }
+  }
+
+  function applyPreset(data, name){
+    if(name === 'none') return;
+    for(let i=0;i<data.length;i+=4){
+      let r=data[i], g=data[i+1], b=data[i+2];
+      const gray = 0.299*r+0.587*g+0.114*b;
+      if(name==='grayscale'){
+        r=g=b=gray;
+      } else if(name==='sepia'){
+        r = gray*1.07 + 20; g = gray*0.86 + 10; b = gray*0.62;
+      } else if(name==='invert'){
+        r = 255-r; g = 255-g; b = 255-b;
+      } else if(name==='noir'){
+        const cf = 1.35;
+        let v = cf*(gray-128)+128;
+        r=g=b=v;
+      } else if(name==='cyanotype'){
+        r = gray*0.25; g = gray*0.55 + 10; b = gray*0.95 + 30;
+      }
+      data[i]=r; data[i+1]=g; data[i+2]=b;
+    }
+  }
+
+  function applyVignette(data, w, h, amount){
+    if(amount<=0) return;
+    const cx=w/2, cy=h/2, maxDist = Math.sqrt(cx*cx+cy*cy);
+    const strength = amount/100;
+    for(let y=0;y<h;y++){
+      for(let x=0;x<w;x++){
+        const dx=x-cx, dy=y-cy;
+        const d = Math.sqrt(dx*dx+dy*dy)/maxDist;
+        const f = 1 - strength * Math.pow(d, 2.2);
+        const i = (y*w+x)*4;
+        data[i]*=f; data[i+1]*=f; data[i+2]*=f;
+      }
+    }
+  }
+
+  function processImageData(imgData, p){
+    const data = imgData.data;
+    pixelate(data, imgData.width, imgData.height, Math.round(p.pixelate));
+    boxBlur(data, imgData.width, imgData.height, p.blur);
+    applyColorGrade(data, p);
+    applyPreset(data, p.preset);
+    applyVignette(data, imgData.width, imgData.height, p.vignette);
+    return imgData;
+  }
+
+  // ---------------------------------------------------------------
+  // Rendering
+  // ---------------------------------------------------------------
+  function recomputeAndDraw(){
+    if(mode !== 'image' || !originalImageData) return;
+    const clone = new ImageData(new Uint8ClampedArray(originalImageData.data), W, H);
+    const p = getParams();
+    processImageData(clone, p);
+    ctx.putImageData(clone, 0, 0);
+    drawOverlays();
+  }
+
+  function drawVideoFrameStatic(){
+    if(!videoEl) return;
+    ctx.drawImage(videoEl, 0, 0, W, H);
+    const imgData = ctx.getImageData(0,0,W,H);
+    processImageData(imgData, getParams());
+    ctx.putImageData(imgData,0,0);
+    drawOverlays();
+  }
+
+  function startVideoLoop(){
+    if(rafId) cancelAnimationFrame(rafId);
+    function loop(){
+      if(videoEl && !videoEl.paused && !videoEl.ended){
+        ctx.drawImage(videoEl, 0, 0, W, H);
+        const imgData = ctx.getImageData(0,0,W,H);
+        processImageData(imgData, getParams());
+        ctx.putImageData(imgData,0,0);
+        drawOverlays();
+        rafId = requestAnimationFrame(loop);
+      }
+    }
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function drawOverlays(){
+    overlays.forEach(o => drawOverlay(o, o.id===selectedId));
+  }
+
+  function drawOverlay(o, selected){
+    ctx.save();
+    ctx.globalAlpha = o.opacity!=null ? o.opacity : 1;
+    if(o.type==='text'){
+      ctx.font = `${o.fontSize}px 'Oswald', sans-serif`;
+      ctx.fillStyle = o.color;
+      ctx.textBaseline = 'top';
+      ctx.fillText(o.text, o.x, o.y);
+      o._w = ctx.measureText(o.text).width; o._h = o.fontSize*1.2;
+    } else if(o.type==='rect'){
+      ctx.fillStyle = o.color; ctx.globalAlpha = (o.opacity!=null?o.opacity:1)*0.001*o.fillAlpha;
+      ctx.fillRect(o.x,o.y,o.w,o.h);
+      ctx.globalAlpha = o.opacity!=null?o.opacity:1;
+      ctx.lineWidth=2; ctx.strokeStyle = o.color;
+      ctx.strokeRect(o.x,o.y,o.w,o.h);
+    } else if(o.type==='circle'){
+      ctx.beginPath();
+      ctx.arc(o.x+o.r, o.y+o.r, o.r, 0, Math.PI*2);
+      ctx.fillStyle = o.color; ctx.globalAlpha=(o.opacity!=null?o.opacity:1)*0.001*o.fillAlpha;
+      ctx.fill();
+      ctx.globalAlpha = o.opacity!=null?o.opacity:1;
+      ctx.lineWidth=2; ctx.strokeStyle=o.color; ctx.stroke();
+    }
+    if(selected){
+      ctx.setLineDash([5,4]); ctx.strokeStyle='#7CFF8C'; ctx.lineWidth=1;
+      const b = boundsOf(o);
+      ctx.strokeRect(b.x-4,b.y-4,b.w+8,b.h+8);
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+  }
+
+  function boundsOf(o){
+    if(o.type==='text') return {x:o.x, y:o.y, w:o._w||60, h:o._h||o.fontSize*1.2};
+    if(o.type==='rect') return {x:o.x, y:o.y, w:o.w, h:o.h};
+    if(o.type==='circle') return {x:o.x, y:o.y, w:o.r*2, h:o.r*2};
+  }
+
+  function redrawCurrentFrame(){
+    if(mode==='image') recomputeAndDraw();
+    else if(mode==='video'){
+      if(videoEl && videoEl.paused) drawVideoFrameStatic();
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Slider / preset bindings
+  // ---------------------------------------------------------------
+  sliderIds.forEach(id=>{
+    sliders[id].addEventListener('input', ()=>{
+      $('v-'+id).textContent = sliders[id].value;
+      redrawCurrentFrame();
+    });
+  });
+
+  $('presets').addEventListener('click', e=>{
+    const btn = e.target.closest('button[data-preset]');
+    if(!btn) return;
+    preset = btn.dataset.preset;
+    [...$('presets').children].forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    redrawCurrentFrame();
+  });
+
+  $('resetFilters').addEventListener('click', ()=>{
+    sliders.brightness.value=0; sliders.contrast.value=0; sliders.saturation.value=100;
+    sliders.gamma.value=100; sliders.temperature.value=0; sliders.blur.value=0;
+    sliders.pixelate.value=1; sliders.vignette.value=0; sliders.grain.value=0;
+    sliderIds.forEach(id=> $('v-'+id).textContent = sliders[id].value );
+    preset='none';
+    [...$('presets').children].forEach(b=>b.classList.remove('on'));
+    $('presets').children[0].classList.add('on');
+    redrawCurrentFrame();
+  });
+
+  // ---------------------------------------------------------------
+  // Overlays: add / list / drag / properties
+  // ---------------------------------------------------------------
+  let uid = 1;
+  function addOverlay(o){
+    o.id = uid++;
+    o.opacity = 1;
+    overlays.push(o);
+    selectedId = o.id;
+    renderOverlayList(); renderPropPanel(); redrawCurrentFrame();
+  }
+
+  $('addText').addEventListener('click', ()=>{
+    if(!mode) return toast('Load media first');
+    addOverlay({type:'text', text:'Your caption', x:W*0.1, y:H*0.1, fontSize:Math.max(18,Math.round(H*0.06)), color:'#ffffff'});
+  });
+  $('addRect').addEventListener('click', ()=>{
+    if(!mode) return toast('Load media first');
+    addOverlay({type:'rect', x:W*0.15, y:H*0.15, w:W*0.3, h:H*0.2, color:'#7CFF8C', fillAlpha:15});
+  });
+  $('addCircle').addEventListener('click', ()=>{
+    if(!mode) return toast('Load media first');
+    addOverlay({type:'circle', x:W*0.4, y:H*0.4, r:Math.min(W,H)*0.1, color:'#FF7A3D', fillAlpha:20});
+  });
+
+  function renderOverlayList(){
+    overlayList.innerHTML='';
+    overlays.forEach(o=>{
+      const div = document.createElement('div');
+      div.className='overlay-item'+(o.id===selectedId?' sel':'');
+      const label = o.type==='text' ? ('“'+o.text.slice(0,14)+(o.text.length>14?'…':'')+'”') : (o.type[0].toUpperCase()+o.type.slice(1));
+      div.innerHTML = `<span>${o.type==='text'?'𝗧':(o.type==='rect'?'▭':'●')} ${label}</span><span class="x">✕</span>`;
+      div.addEventListener('click', (e)=>{
+        if(e.target.classList.contains('x')){
+          overlays = overlays.filter(x=>x.id!==o.id);
+          if(selectedId===o.id) selectedId=null;
+        } else {
+          selectedId = o.id;
+        }
+        renderOverlayList(); renderPropPanel(); redrawCurrentFrame();
+      });
+      overlayList.appendChild(div);
+    });
+  }
+
+  function renderPropPanel(){
+    propPanel.innerHTML='';
+    const o = overlays.find(x=>x.id===selectedId);
+    if(!o) return;
+    const panel = document.createElement('div');
+    panel.className='prop-panel';
+    let inner = '';
+    if(o.type==='text'){
+      inner += `<input type="text" id="p-text" value="${o.text.replace(/"/g,'&quot;')}">`;
+      inner += `<div class="ctrl"><label>Size <span class="val" id="p-size-v">${o.fontSize}</span></label><input type="range" id="p-size" min="10" max="${Math.round(H*0.4)}" value="${o.fontSize}"></div>`;
+    }
+    if(o.type==='rect' || o.type==='circle'){
+      inner += `<div class="ctrl"><label>Fill <span class="val" id="p-fill-v">${o.fillAlpha}%</span></label><input type="range" id="p-fill" min="0" max="100" value="${o.fillAlpha}"></div>`;
+    }
+    inner += `<div class="ctrl"><label>Opacity <span class="val" id="p-op-v">${Math.round(o.opacity*100)}%</span></label><input type="range" id="p-op" min="0" max="100" value="${Math.round(o.opacity*100)}"></div>`;
+    inner += `<input type="color" id="p-color" value="${rgbToHex(o.color)}">`;
+    panel.innerHTML = inner;
+    propPanel.appendChild(panel);
+
+    if(o.type==='text'){
+      $('p-text').addEventListener('input', e=>{ o.text=e.target.value; renderOverlayList(); redrawCurrentFrame(); });
+      $('p-size').addEventListener('input', e=>{ o.fontSize=+e.target.value; $('p-size-v').textContent=o.fontSize; redrawCurrentFrame(); });
+    }
+    if(o.type==='rect'||o.type==='circle'){
+      $('p-fill').addEventListener('input', e=>{ o.fillAlpha=+e.target.value; $('p-fill-v').textContent=o.fillAlpha+'%'; redrawCurrentFrame(); });
+    }
+    $('p-op').addEventListener('input', e=>{ o.opacity=+e.target.value/100; $('p-op-v').textContent=e.target.value+'%'; redrawCurrentFrame(); });
+    $('p-color').addEventListener('input', e=>{ o.color=e.target.value; redrawCurrentFrame(); });
+  }
+
+  function rgbToHex(c){
+    if(c.startsWith('#')) return c;
+    return '#ffffff';
+  }
+
+  // drag overlays directly on canvas
+  function stagePos(e){
+    const rect = stage.getBoundingClientRect();
+    const sx = W/rect.width, sy = H/rect.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x:(clientX-rect.left)*sx, y:(clientY-rect.top)*sy };
+  }
+  function hitTest(pos){
+    for(let i=overlays.length-1;i>=0;i--){
+      const o = overlays[i], b = boundsOf(o);
+      if(pos.x>=b.x-4 && pos.x<=b.x+b.w+4 && pos.y>=b.y-4 && pos.y<=b.y+b.h+4) return o;
+    }
+    return null;
+  }
+  stage.addEventListener('mousedown', e=>{
+    if(!mode) return;
+    const pos = stagePos(e);
+    const hit = hitTest(pos);
+    if(hit){
+      selectedId = hit.id;
+      dragState = {id:hit.id, dx:pos.x-hit.x, dy:pos.y-hit.y};
+      stage.classList.add('draggable');
+      renderOverlayList(); renderPropPanel(); redrawCurrentFrame();
+    } else {
+      selectedId = null; renderOverlayList(); renderPropPanel(); redrawCurrentFrame();
+    }
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!dragState) return;
+    const pos = stagePos(e);
+    const o = overlays.find(x=>x.id===dragState.id);
+    if(!o) return;
+    o.x = pos.x - dragState.dx; o.y = pos.y - dragState.dy;
+    redrawCurrentFrame();
+  });
+  window.addEventListener('mouseup', ()=>{ dragState=null; stage.classList.remove('draggable'); });
+
+  // ---------------------------------------------------------------
+  // Transport controls (video)
+  // ---------------------------------------------------------------
+  playBtn.addEventListener('click', ()=>{
+    if(!videoEl) return;
+    if(videoEl.paused) videoEl.play(); else videoEl.pause();
+  });
+  scrub.addEventListener('input', ()=>{
+    if(!videoEl) return;
+    dragState = {type:'scrub'};
+    videoEl.currentTime = +scrub.value;
+    if(videoEl.paused) drawVideoFrameStatic();
+    updateTimeReadout();
+  });
+  scrub.addEventListener('change', ()=>{ dragState=null; });
+  muteBtn.addEventListener('click', ()=>{
+    if(!videoEl) return;
+    videoEl.muted = !videoEl.muted;
+    muteBtn.textContent = videoEl.muted ? '🔇' : '🔊';
+  });
+
+  // ---------------------------------------------------------------
+  // Web Audio: waveform scope
+  // ---------------------------------------------------------------
+  function setupAudio(v){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    sourceNode = audioCtx.createMediaElementSource(v);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    timeData = new Uint8Array(analyser.fftSize);
+    destNode = audioCtx.createMediaStreamDestination();
+    sourceNode.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    analyser.connect(destNode);
+  }
+
+  function resizeScope(){
+    const rect = scope.getBoundingClientRect();
+    scope.width = rect.width * devicePixelRatio;
+    scope.height = rect.height * devicePixelRatio;
+  }
+  window.addEventListener('resize', ()=>{ if(mode==='video') resizeScope(); });
+
+  function startScopeLoop(){
+    if(scopeRafId) cancelAnimationFrame(scopeRafId);
+    let phase = 0;
+    function loop(){
+      const w = scope.width, h = scope.height;
+      scopeCtx.clearRect(0,0,w,h);
+      // faint grid
+      scopeCtx.strokeStyle = 'rgba(124,255,140,0.08)';
+      scopeCtx.lineWidth = 1;
+      for(let gx=0; gx<w; gx+=w/12){ scopeCtx.beginPath(); scopeCtx.moveTo(gx,0); scopeCtx.lineTo(gx,h); scopeCtx.stroke(); }
+      scopeCtx.beginPath(); scopeCtx.moveTo(0,h/2); scopeCtx.lineTo(w,h/2); scopeCtx.stroke();
+
+      if(analyser){
+        analyser.getByteTimeDomainData(timeData);
+        scopeCtx.lineWidth = 2*devicePixelRatio;
+        scopeCtx.strokeStyle = '#7CFF8C';
+        scopeCtx.shadowColor = '#7CFF8C'; scopeCtx.shadowBlur = 6;
+        scopeCtx.beginPath();
+        const slice = w / timeData.length;
+        for(let i=0;i<timeData.length;i++){
+          const v = timeData[i]/128 - 1;
+          const y = h/2 + v*(h/2)*0.85;
+          const x = i*slice;
+          if(i===0) scopeCtx.moveTo(x,y); else scopeCtx.lineTo(x,y);
+        }
+        scopeCtx.stroke();
+        scopeCtx.shadowBlur = 0;
+      }
+      // moving scanline (signature detail)
+      phase = (phase + 1.2) % w;
+      scopeCtx.fillStyle = 'rgba(255,122,61,0.55)';
+      scopeCtx.fillRect(phase, 0, 2*devicePixelRatio, h);
+
+      scopeRafId = requestAnimationFrame(loop);
+    }
+    loop();
+  }
+
+  // ---------------------------------------------------------------
+  // Export
+  // ---------------------------------------------------------------
+  function download(url, filename){
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+
+  exportBtn.addEventListener('click', ()=>{
+    if(mode==='image'){
+      recomputeAndDraw();
+      const url = stage.toDataURL('image/png');
+      download(url, 'signal-export.png');
+      toast('PNG exported');
+    } else if(mode==='video'){
+      exportVideo();
+    }
+  });
+
+  function exportVideo(){
+    if(!videoEl || !audioCtx) return;
+    exportBtn.disabled = true; exportBtn.textContent = 'Recording…';
+    const canvasStream = stage.captureStream(30);
+    const audioTrack = destNode.stream.getAudioTracks()[0];
+    const combined = new MediaStream([...canvasStream.getVideoTracks(), ...(audioTrack?[audioTrack]:[])]);
+    let recorder;
+    try{
+      recorder = new MediaRecorder(combined, {mimeType:'video/webm;codecs=vp9,opus'});
+    }catch(e){
+      recorder = new MediaRecorder(combined);
+    }
+    const chunks = [];
+    recorder.ondataavailable = e=>{ if(e.data.size>0) chunks.push(e.data); };
+    recorder.onstop = ()=>{
+      const blob = new Blob(chunks, {type:'video/webm'});
+      download(URL.createObjectURL(blob), 'signal-export.webm');
+      exportBtn.disabled = false; exportBtn.textContent = 'Export WEBM';
+      toast('WEBM exported');
+    };
+    videoEl.currentTime = 0;
+    videoEl.muted = false;
+    recorder.start();
+    videoEl.play();
+    const stopAt = () => {
+      recorder.stop();
+      videoEl.removeEventListener('ended', stopAt);
+    };
+    videoEl.addEventListener('ended', stopAt);
+  }
+
+  // keyboard delete for selected overlay
+  window.addEventListener('keydown', e=>{
+    if((e.key==='Delete'||e.key==='Backspace') && selectedId!=null && document.activeElement.tagName!=='INPUT'){
+      overlays = overlays.filter(o=>o.id!==selectedId);
+      selectedId = null;
+      renderOverlayList(); renderPropPanel(); redrawCurrentFrame();
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

@@ -1,4 +1,5 @@
-#  Tracking Progress in Learning JavaScript
+
+# Tracking Progress in Learning JavaScript
 
 ## Topics Covered
 
@@ -35,19 +36,19 @@
 
 ---
 
-###  Files
+### Files
 
-| File | Description |
-|------|-------------|
-| [`CREAT-ARRAY.js`](./ARRAY/CREAT-ARRAY.js) | Demonstrates the two core ways to create arrays: Array Literal and Array Constructor |
-| [`ARRAY-FROM.js`](./ARRAY/ARRAY-FROM.js) | Demonstrates `Array.from()` — converting strings, NodeLists, Sets, array-like objects, and using mapping functions |
-| [`index.html`](./ARRAY/index.html) | Browser demo page: converts a DOM NodeList (`<ul>` list items) into an array and displays the result |
+| File                                       | Description                                            |
+|------                                      |-------------                                           |
+| [`CREAT-ARRAY.js`](./ARRAY/CREAT-ARRAY.js) | Demonstrates the two core ways to create arrays: Array Literal and Array Constructor                                                                         |
+| [`ARRAY-FROM.js`](./ARRAY/ARRAY-FROM.js)   | Demonstrates `Array.from()` — converting strings, NodeLists, Sets, array-like objects, and using mapping functions |
+| [`index.html`](./ARRAY/index.html)         | Browser demo page: converts a DOM NodeList (`<ul>` list items) into an array and displays the result |
 
 ---
 
 ### 1.1 Creating and Initializing Arrays
 
-####  Method 1 — Array Literal (`CREAT-ARRAY.js`)
+#### Method 1 — Array Literal (`CREAT-ARRAY.js`)
 
 The simplest and most common way to create arrays.
 
@@ -58,7 +59,7 @@ const stringArr = ["a", "b", "c", "d", "e"]                           // String 
 const mixedArr = [1, "a", true, null, undefined, function () { }, {}]  // Mixed types
 ```
 
-####  Method 2 — Array Constructor (`CREAT-ARRAY.js`)
+#### Method 2 — Array Constructor (`CREAT-ARRAY.js`)
 
 Using the built-in `Array` class to create arrays.
 
@@ -77,7 +78,8 @@ const constructorArr3 = new Array(1,2,3,4,5)  // Array with values [1, 2, 3, 4, 
 `Array.from()` converts any **iterable** or **array-like** object into a real Array.
 
 **Syntax:**
-```js
+
+```js 
 Array.from(iterable, mapFn, thisArg)
 ```
 
@@ -130,6 +132,7 @@ const stringAndLength = Array.from('Jaguar', (char, index) => `${char}-${index}`
 The [`index.html`](./ARRAY/index.html) file demonstrates converting a DOM `NodeList` into an array using `Array.from()`.
 
 **HTML structure:**
+
 ```html
 <ul id="myList">
   <li>Apple</li>
@@ -142,7 +145,8 @@ The [`index.html`](./ARRAY/index.html) file demonstrates converting a DOM `NodeL
 ```
 
 **JS logic (`ARRAY-FROM.js`):**
-```js
+
+ ```js
 const NodeList = document.querySelectorAll('#myList li')
 
 document.getElementById('demo').innerHTML = Array.from(NodeList, (li) => {
@@ -152,19 +156,35 @@ document.getElementById('demo').innerHTML = Array.from(NodeList, (li) => {
 // and renders it inside #demo
 ```
 
->  `querySelectorAll()` returns a **NodeList**, not a true Array. `Array.from()` converts it so you can use `.map()`, `.filter()`, `.reduce()`, etc.
-
+>`querySelectorAll()` returns a **NodeList**, not a true Array. `Array.from()` converts it so you can use `.map()`, `.filter()`, `.reduce()`, etc.
 
 ### 1.4 Array Methods
 
- push() = adding array element to the end 
- pop() = removing array element from the end 
- shift() = removing array element from the start 
- unshift() = adding array element to the start 
+ push() = adding array element to the end.
+ pop() = removing array element from the end.
+ shift() = removing array element from the start. 
+ unshift() = adding array element to the start.
  splice() = removing and adding array element from the specified index
  filter() = filtering array element based on the condition
   
+## FUNCTIONS
 
+  Functions are blocks of code designed to perform a particular task.
+  Functions are executed only when they are called.
 
+## high order function 
 
+- a function that takes another fuction as an argument.
+- a function that returns a function.
+- a function that returns a function and takes another function as an argument.
 
+```js
+   function aggregate(a, b, c, arithmetic) {
+  const firstResult = arithmetic(a, b);
+  const secondResult = arithmetic(firstResult, c);
+  return secondResult;
+}
+
+```
+
+![high order function](Images/image.png)
